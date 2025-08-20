@@ -162,31 +162,31 @@ select
 from
 	Documents D
 	inner join
-	ClientPrograms cp on D.ClientProgramId = cp.ClientProgramId and isnull(cp.RecordDeleted,'N')='N'
+	ClientPrograms cp on D.ClientProgramId = cp.ClientProgramId 
 	left outer join
-	CANSGenerals G on D.currentdocumentversionid = G.DocumentVersionId and isnull(G.recorddeleted, 'N') = 'N'
+	CANS G on D.currentdocumentversionid = G.DocumentVersionId
 	left outer join
-	CANSGeneralBehavioralEmotions as GBEH on D.currentdocumentversionid = GBEH.DocumentVersionId and isnull(GBEH.recorddeleted, 'N') = 'N'
+	CANSBehavioralEmotions as GBEH on D.currentdocumentversionid = GBEH.DocumentVersionId 
 	left outer join
-	CANSGeneralCulturalFactorsDomains as GCUL on D.currentdocumentversionid = GCUL.DocumentVersionId and isnull(GCUL.recorddeleted, 'N') = 'N'
+	CANSCulturalFactorsDomains as GCUL on D.currentdocumentversionid = GCUL.DocumentVersionId 
 	left outer join
-	CANSGeneralLFDomains as GLF on D.currentdocumentversionid = GLF.DocumentVersionId and isnull(GLF.recorddeleted, 'N') = 'N'
+	CANSLFDomains as GLF on D.currentdocumentversionid = GLF.DocumentVersionId 
 	left outer join
-	CANSGeneralRiskBehaviors as GRSK on D.currentdocumentversionid = GRSK.DocumentVersionId and isnull(GRSK.recorddeleted, 'N') = 'N'
+	CANSRiskBehaviors as GRSK on D.currentdocumentversionid = GRSK.DocumentVersionId 
 	left outer join
-	CANSGeneralStrengthsDomains as GSTR on D.currentdocumentversionid = GSTR.DocumentVersionId and isnull(GSTR.recorddeleted, 'N') = 'N'
+	CANSStrengthsDomains as GSTR on D.currentdocumentversionid = GSTR.DocumentVersionId 
 	left outer join
-	CANSGeneralECBehavioralEmotions as ECBEH on D.currentdocumentversionid = ECBEH.DocumentVersionId and isnull(ECBEH.recorddeleted, 'N') = 'N'
+	CANSECBehavioralEmotions as ECBEH on D.currentdocumentversionid = ECBEH.DocumentVersionId 
 	left outer join
-	CANSGeneralECCulturalFactors as ECCUL on D.currentdocumentversionid = ECCUL.DocumentVersionId and isnull(ECCUL.recorddeleted, 'N') = 'N'
+	CANSECCulturalFactors as ECCUL on D.currentdocumentversionid = ECCUL.DocumentVersionId 
 	left outer join
-	CANSGeneralECLFDomains as ECLF on D.currentdocumentversionid = ECLF.DocumentVersionId and isnull(ECLF.recorddeleted, 'N') = 'N'
+	CANSECLFDomains as ECLF on D.currentdocumentversionid = ECLF.DocumentVersionId 
 	left outer join
-	CANSGeneralECRiskBehaviors as ECRSK on D.currentdocumentversionid = ECRSK.DocumentVersionId and isnull(ECRSK.recorddeleted, 'N') = 'N'
+	CANSECRiskBehaviors as ECRSK on D.currentdocumentversionid = ECRSK.DocumentVersionId
 	left outer join
-	CANSGeneralECIndividualStrengths as ECSTR on D.currentdocumentversionid = ECSTR.DocumentVersionId and isnull(ECSTR.recorddeleted, 'N') = 'N'
+	CANSECIndividualStrengths as ECSTR on D.currentdocumentversionid = ECSTR.DocumentVersionId 
 	left outer join 
-	CANSCaregiverResourcesNeeds as CRN on D.CurrentDocumentVersionId = CRN.DocumentVersionId and isnull(CRN.RecordDeleted, 'N') = 'N'
+	CANSCaregiverResourcesNeeds as CRN on D.CurrentDocumentVersionId = CRN.DocumentVersionId 
 		AND [CaregiverNeedId] = (SELECT MIN(CRN2.[CaregiverNeedId]) 
 													FROM [CANSCaregiverResourcesNeeds] CRN2
 													WHERE CRN2.DocumentVersionId = CRN.DocumentVersionId)
@@ -212,15 +212,14 @@ from
 
   FROM [CANSTraumaTransitionPotentials] TTP
   	JOIN Documents DOC on DOC.CurrentDocumentVersionId = TTP.DocumentVersionId
-  WHERE ISNULL(TTP.[RecordDeleted],'N')='N'
+  WHERE 1=1
   AND DOC.EffectiveDate <= @EndDate
   GROUP BY DOC.ClientId
 	) as TTP on D.ClientId = TTP.ClientId
 
 where 1=1
-	and D.documentcodeid = 60142  -- CANS
-	and D.status = 22   --signed
-	and isnull(D.recorddeleted, 'N') = 'N'
+	and D.documentcodeid = 12345 -- CANS (modified)
+	and D.status = 1   --signed (modified)
 	and CurrentDocumentVersionId = (select DocumentVersionId from DocumentVersions where CurrentDocumentVersionId = DocumentVersionId)
 	AND D.EffectiveDate <= @EndDate
 	AND CONVERT(int,ROUND(DATEDIFF(hour,(SELECT c.DOB FROM Clients c WHERE c.ClientId = D.ClientId),D.EffectiveDate)/8766.0,0)) BETWEEN 6 AND 20 --only show enrollments where clients are aged between 6 and 20 years old
@@ -234,7 +233,7 @@ RecentCANS.DischargedDate,
 RecentCANS.DocumentId,
 RecentCANS.EffectiveDate,
 RecentCANS.ClientId,
-[Client Id 6 Months] = CASE
+[Client Id 6 Months] = CASE --to show count of clients that had CANS completed in a timely fashion
 	WHEN RecentCANS.EffectiveDate >= DATEADD(month,-6,@EndDate) THEN RecentCANS.ClientId
 	END,
 RecentCANS.ProgramId,
@@ -242,15 +241,14 @@ RecentCANS.Program,
 RecentCANS.ClinicalDataAccessGroupId,
 RecentCANS.ClientProgramId,
 RecentCANS.AssessmentType,
-
+	
 COALESCE(IniCANS.EnrolledDate,NoIniCANS.EnrolledDate) as InitialEnrolledDate,
 COALESCE(IniCANS.DischargedDate,NoIniCANS.DischargedDate) as InitialDischargedDate,
 COALESCE(IniCANS.DocumentId,NoIniCANS.DocumentId) as InitialDocumentId,
 COALESCE(IniCANS.EffectiveDate,NoIniCANS.EffectiveDate) as InitialEffectiveDate,
-COALESCE(IniCANS.ClientId,NoIniCANS.ClientId) as InitialClientId,
+COALESCE(IniCANS.ClientId,NoIniCANS.ClientId) as InitialClientId, --to show a count of clients that had more than one CANS
 COALESCE(IniCANS.ProgramId,NoIniCANS.ProgramId) as InitialProgramId,
 COALESCE(IniCANS.Program,NoIniCANS.Program) as InitialProgram,
-COALESCE(IniCANS.ClinicalDataAccessGroupId,NoIniCANS.ClinicalDataAccessGroupId) as InitialClinicalDataAccessGroupId,
 COALESCE(IniCANS.ClientProgramId,NoIniCANS.ClientProgramId) as InitialClientProgramId,
 
 --ACTIONABLE NEEDS
@@ -328,3 +326,4 @@ WHERE CTE.AssessmentType <> 'I'
 WHERE 1=1
 
 and RecentCANS.MostRecentCANS = 1 --limits results to only the most recent CANS
+
