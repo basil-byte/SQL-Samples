@@ -23,7 +23,6 @@ select
 	EffectiveDate, 
 	D.ProgramId, 
 	Program = (SELECT ProgramName FROM Programs p where p.programId = D.ProgramId),
-	ClinicalDataAccessGroupId, 
 	D.ClientProgramId,
 	G.AssessmentType,
 [Sum of Behavioral/ Emotional Needs AN] =
@@ -327,4 +326,5 @@ WHERE CTE.AssessmentType <> 'I'
 
 
 WHERE 1=1
+
 and RecentCANS.MostRecentCANS = 1 --limits results to only the most recent CANS
